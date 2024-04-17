@@ -838,7 +838,7 @@ struct nullopt_t
 /// void foo (thrust::optional<int>);
 /// foo(thrust::nullopt); //pass an empty optional
 /// ```
-static constexpr nullopt_t nullopt{nullopt_t::do_not_use{}, nullopt_t::do_not_use{}};
+_LIBCUDACXX_CPO_ACCESSIBILITY nullopt_t nullopt{nullopt_t::do_not_use{}, nullopt_t::do_not_use{}};
 
 class bad_optional_access : public std::exception
 {
