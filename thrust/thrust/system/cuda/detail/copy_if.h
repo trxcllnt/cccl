@@ -45,6 +45,7 @@
 #  include <cub/util_temporary_storage.cuh>
 #  include <cub/util_type.cuh>
 
+#  include <thrust/advance.h>
 #  include <thrust/detail/alignment.h>
 #  include <thrust/detail/cstdint.h>
 #  include <thrust/detail/function.h>
@@ -146,7 +147,6 @@ struct DispatchCopyIf
     // Return for empty problems
     if (num_items == 0)
     {
-      output;
       return status;
     }
 
@@ -179,8 +179,7 @@ struct DispatchCopyIf
     status = cuda_cub::synchronize(policy);
     CUDA_CUB_RET_IF_FAIL(status);
     OffsetT num_selected = get_value(policy, d_num_selected_out);
-
-    output += num_selected;
+    thrust::advance(output, num_selected);
     return status;
   }
 };

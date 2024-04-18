@@ -42,6 +42,9 @@
 #  pragma system_header
 #endif // no system header
 
+#if defined(_CCCL_CUDA_COMPILER)
+#include <cub/util_ptx.cuh>
+#endif // _CCCL_CUDA_COMPILER
 #include <cub/util_type.cuh>
 
 #include <cuda/discard_memory>
@@ -131,7 +134,7 @@ public:
    * passed to the agent, specialized for the case when we can use native shared memory as temporary
    * storage and taking a linear block id.
    */
-  static _CCCL_DEVICE __forceinline__ typename AgentT::TempStorage&
+  static _CCCL_DEVICE _CCCL_FORCEINLINE typename AgentT::TempStorage&
   get_temp_storage(typename AgentT::TempStorage& static_temp_storage, vsmem_t&, std::size_t)
   {
     return static_temp_storage;
@@ -155,7 +158,7 @@ public:
    * passed to the agent, specialized for the case when we have to use global memory-backed
    * virtual shared memory as temporary storage and taking a linear block id.
    */
-  static _CCCL_DEVICE __forceinline__ typename AgentT::TempStorage&
+  static _CCCL_DEVICE _CCCL_FORCEINLINE typename AgentT::TempStorage&
   get_temp_storage(cub::NullType& static_temp_storage, vsmem_t& vsmem, std::size_t linear_block_id)
   {
     return *reinterpret_cast<typename AgentT::TempStorage*>(
@@ -176,6 +179,7 @@ public:
     return false;
   }
 
+#  if defined(_CCCL_CUDA_COMPILER)
   /**
    * @brief Hints to discard modified cache lines of the used virtual shared memory.
    * modified cache lines.
@@ -186,9 +190,8 @@ public:
   template <bool needs_vsmem_ = needs_vsmem, typename ::cuda::std::enable_if<needs_vsmem_, int>::type = 0>
   static _CCCL_DEVICE _CCCL_FORCEINLINE bool discard_temp_storage(typename AgentT::TempStorage& temp_storage)
   {
-#  if defined(_CCCL_CUDA_COMPILER)
     // Ensure all threads finished using temporary storage
-    NV_IF_TARGET(NV_IS_HOST, (__syncthreads();))
+    CTA_SYNC();
 
     const std::size_t linear_tid   = threadIdx.x;
     const std::size_t block_stride = line_size * blockDim.x;
@@ -202,10 +205,8 @@ public:
       cuda::discard_memory(thread_ptr, line_size);
     }
     return true;
-#  else // ^^^ _CCCL_CUDA_COMPILER ^^^ / vvv !_CCCL_CUDA_COMPILER vvv
-    return false;
-#  endif // !_CCCL_CUDA_COMPILER
   }
+#  endif // _CCCL_CUDA_COMPILER
 };
 
 template <class DefaultAgentT, class FallbackAgentT>

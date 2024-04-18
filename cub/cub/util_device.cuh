@@ -55,6 +55,7 @@
 #include <cub/util_temporary_storage.cuh>
 
 #include <cuda/std/type_traits>
+#include <cuda/std/utility>
 
 #include <array>
 #include <atomic>
