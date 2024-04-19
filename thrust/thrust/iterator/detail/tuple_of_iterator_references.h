@@ -67,9 +67,7 @@ public:
   using super_t = thrust::tuple<Ts...>;
   using super_t::super_t;
 
-  inline _CCCL_HOST_DEVICE tuple_of_iterator_references()
-      : super_t()
-  {}
+  tuple_of_iterator_references() = default;
 
   // allow implicit construction from tuple<refs>
   inline _CCCL_HOST_DEVICE tuple_of_iterator_references(const super_t& other)

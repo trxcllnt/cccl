@@ -160,9 +160,7 @@ struct tuple : public _CUDA_VSTD::tuple<Ts...>
   using super_t = _CUDA_VSTD::tuple<Ts...>;
   using super_t::super_t;
 
-  _CCCL_HOST_DEVICE tuple()
-      : super_t()
-  {}
+  tuple() = default;
 
   template <class _TupleOfIteratorReferences,
             _CUDA_VSTD::__enable_if_t<__is_tuple_of_iterator_references<_TupleOfIteratorReferences>::value, int> = 0,
