@@ -77,22 +77,6 @@ struct pair : public _CUDA_VSTD::pair<T, U>
 {
   using super_t = _CUDA_VSTD::pair<T, U>;
   using super_t::super_t;
-
-  pair() = default;
-
-  _CCCL_EXEC_CHECK_DISABLE
-  template <class... Args, _CUDA_VSTD::__enable_if_t<_CUDA_VSTD::is_constructible<super_t, Args...>::value, int> = 0>
-  _CCCL_HOST_DEVICE pair(Args&&... args)
-      : super_t(_CUDA_VSTD::forward<Args>(args)...)
-  {}
-
-  _CCCL_EXEC_CHECK_DISABLE
-  template <class... Args, _CUDA_VSTD::__enable_if_t<_CUDA_VSTD::is_assignable<super_t, Args...>::value, int> = 0>
-  _CCCL_HOST_DEVICE pair& operator=(Args&&... args)
-  {
-    super_t::operator=(_CUDA_VSTD::forward<Args>(args)...);
-    return *this;
-  }
 };
 
 #if _CCCL_STD_VER >= 2017

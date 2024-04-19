@@ -172,12 +172,6 @@ struct tuple : public _CUDA_VSTD::tuple<Ts...>
         _CUDA_VSTD::__make_tuple_indices_t<sizeof...(Ts)>()))
   {}
 
-  template <class TupleLike,
-            _CUDA_VSTD::__enable_if_t<_CUDA_VSTD::__tuple_constructible<TupleLike, super_t>::value, int> = 0>
-  _CCCL_HOST_DEVICE tuple(TupleLike&& other)
-      : super_t(_CUDA_VSTD::forward<TupleLike>(other))
-  {}
-
   _CCCL_EXEC_CHECK_DISABLE
   template <class TupleLike,
             _CUDA_VSTD::__enable_if_t<_CUDA_VSTD::__tuple_assignable<TupleLike, super_t>::value, int> = 0>
