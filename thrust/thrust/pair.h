@@ -50,7 +50,7 @@ THRUST_NAMESPACE_BEGIN
  *  \tparam T A \c pair type of interest.
  */
 template <size_t N, class T>
-using tuple_element = ::cuda::std::tuple_element<N, T>;
+using tuple_element = _CUDA_VSTD::tuple_element<N, T>;
 
 /*! This convenience metafunction is included for compatibility with
  *  \p tuple. It returns \c 2, the number of elements of a \p pair,
@@ -59,7 +59,7 @@ using tuple_element = ::cuda::std::tuple_element<N, T>;
  *  \tparam Pair A \c pair type of interest.
  */
 template <class T>
-using tuple_size = ::cuda::std::tuple_size<T>;
+using tuple_size = _CUDA_VSTD::tuple_size<T>;
 
 /*! \p pair is a generic data structure encapsulating a heterogeneous
  *  pair of values.
@@ -73,10 +73,52 @@ using tuple_size = ::cuda::std::tuple_size<T>;
  *          provided by <tt>pair::second_type</tt>.
  */
 template <class T, class U>
-using pair = ::cuda::std::pair<T, U>;
+struct pair : public _CUDA_VSTD::pair<T, U>
+{
+  using super_t = _CUDA_VSTD::pair<T, U>;
+  using super_t::super_t;
 
-using ::cuda::std::get;
-using ::cuda::std::make_pair;
+  pair() = default;
+
+  _CCCL_EXEC_CHECK_DISABLE
+  template <class... Args, _CUDA_VSTD::__enable_if_t<_CUDA_VSTD::is_constructible<super_t, Args...>::value, int> = 0>
+  _CCCL_HOST_DEVICE pair(Args&&... args)
+      : super_t(_CUDA_VSTD::forward<Args>(args)...)
+  {}
+
+  _CCCL_EXEC_CHECK_DISABLE
+  template <class... Args, _CUDA_VSTD::__enable_if_t<_CUDA_VSTD::is_assignable<super_t, Args...>::value, int> = 0>
+  _CCCL_HOST_DEVICE pair& operator=(Args&&... args)
+  {
+    super_t::operator=(_CUDA_VSTD::forward<Args>(args)...);
+    return *this;
+  }
+};
+
+#if _CCCL_STD_VER >= 2017
+template <class _T1, class _T2>
+_CCCL_HOST_DEVICE pair(_T1, _T2) -> pair<_T1, _T2>;
+#endif // _CCCL_STD_VER >= 2017
+
+template <class T1, class T2>
+inline _CCCL_HOST_DEVICE
+  _CUDA_VSTD::__enable_if_t<_CUDA_VSTD::__is_swappable<T1>::value && _CUDA_VSTD::__is_swappable<T2>::value, void>
+  swap(pair<T1, T2>& lhs, pair<T1, T2>& rhs) noexcept(
+    (_CUDA_VSTD::__is_nothrow_swappable<T1>::value && _CUDA_VSTD::__is_nothrow_swappable<T2>::value))
+{
+  lhs.swap(rhs);
+}
+
+template <class T1, class T2>
+inline _CCCL_HOST_DEVICE
+  pair<typename _CUDA_VSTD::__unwrap_ref_decay<T1>::type, typename _CUDA_VSTD::__unwrap_ref_decay<T2>::type>
+  make_pair(T1&& t1, T2&& t2)
+{
+  return pair<typename _CUDA_VSTD::__unwrap_ref_decay<T1>::type, typename _CUDA_VSTD::__unwrap_ref_decay<T2>::type>(
+    _CUDA_VSTD::forward<T1>(t1), _CUDA_VSTD::forward<T2>(t2));
+}
+
+using _CUDA_VSTD::get;
 
 /*! \endcond
  */
@@ -88,3 +130,38 @@ using ::cuda::std::make_pair;
  */
 
 THRUST_NAMESPACE_END
+
+_LIBCUDACXX_BEGIN_NAMESPACE_STD
+
+template <class T1, class T2>
+struct tuple_size<THRUST_NS_QUALIFIER::pair<T1, T2>> : tuple_size<pair<T1, T2>>
+{};
+
+template <size_t Id, class T1, class T2>
+struct tuple_element<Id, THRUST_NS_QUALIFIER::pair<T1, T2>> : tuple_element<Id, pair<T1, T2>>
+{};
+
+template <class T1, class T2>
+struct __tuple_like_ext<THRUST_NS_QUALIFIER::pair<T1, T2>> : true_type
+{};
+
+_LIBCUDACXX_END_NAMESPACE_STD
+
+// This is a workaround for the fact that structured bindings require that the specializations of
+// `tuple_size` and `tuple_element` reside in namespace std (https://eel.is/c++draft/dcl.struct.bind#4).
+// See https://github.com/NVIDIA/libcudacxx/issues/316 for a short discussion
+#if _CCCL_STD_VER >= 2017
+
+#  include <utility>
+
+namespace std
+{
+template <class T1, class T2>
+struct tuple_size<THRUST_NS_QUALIFIER::pair<T1, T2>> : tuple_size<pair<T1, T2>>
+{};
+
+template <size_t Id, class T1, class T2>
+struct tuple_element<Id, THRUST_NS_QUALIFIER::pair<T1, T2>> : tuple_element<Id, pair<T1, T2>>
+{};
+} // namespace std
+#endif // _CCCL_STD_VER >= 2017

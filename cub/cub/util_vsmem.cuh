@@ -43,7 +43,7 @@
 #endif // no system header
 
 #if defined(_CCCL_CUDA_COMPILER)
-#include <cub/util_ptx.cuh>
+#  include <cub/util_ptx.cuh>
 #endif // _CCCL_CUDA_COMPILER
 #include <cub/util_type.cuh>
 
